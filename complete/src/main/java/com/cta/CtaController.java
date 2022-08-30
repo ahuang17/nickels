@@ -11,18 +11,26 @@ import java.util.stream.Collectors;
 @RestController
 public class CtaController {
 
-    public ArrayList<Integer> custWallet = new ArrayList<Integer>();
+    public ArrayList<String> custWallet = new ArrayList<String>();
+
+    public ArrayList<Integer> custWalletInt = new ArrayList<Integer>();
 
 	@GetMapping("/checkFare/{fare}")
-	public int getNumFareOptions(@PathVariable int fare) {
-        return fareWays(custWallet, fare);
+	public String getNumFare(@PathVariable int fare) {
+        return fareWaysResults(custWallet, fare);
+	}
+
+    @GetMapping("/checkFareWays/{fare}")
+    public int getNumFareWays(@PathVariable int fare) {
+        return fareWays(custWalletInt, fare);
 	}
 
     @GetMapping("/addMoney/{money}")
     public void addMoney(@PathVariable String money) {
         String[] parts = money.split(",");
         for (int i = 0; i < parts.length; i++) {
-        custWallet.add(Integer.parseInt(parts[i]));
+            custWallet.add(parts[i]);
+            custWalletInt.add(Integer.parseInt(parts[i]));
         }
     }
 
@@ -35,33 +43,14 @@ public class CtaController {
         }
 	}
 
-	public static int fareWays(ArrayList<Integer> wallet, int sum) {
+    @GetMapping("/emptyWallet")
+	public void emptyWallet() throws Exception{
+        custWallet.clear();
+	}
 
-        HashMap formattedWallet = formatWallet(wallet);
+	public int fareWays(ArrayList<Integer> wallet, int sum) {
 
-        int[][] map = new int[wallet.size() + 1][sum + 1];
-
-        map[0][0] = 1;
-        for (int j = 1; j <= wallet.size(); j++) {
-            for (int i = 0; i <= sum; i++) {
-                map[j][i] += map[j - 1][i];
-            }
-            //printArray(map, wallet.length, sum);
-
-            for (int k = 1; k <= (int) formattedWallet.get(wallet.get(j-1)); k++) {
-                int initial = wallet.get(j - 1) * k;
-                for (int i = initial; i <= sum; i++) {
-                    map[j][i] += map[j - 1][i - initial];
-                    //printArray(map, wallet.length, sum);
-                }
-            }
-        }
-        return map[wallet.size()][sum];
-    }
-
-    public static int showFareWays(ArrayList<Integer> wallet, int sum) {
-
-        HashMap formattedWallet = formatWallet(wallet);
+        HashMap formattedWallet = formatWalletWays(wallet);
 
         int[][] map = new int[wallet.size() + 1][sum + 1];
 
@@ -70,30 +59,76 @@ public class CtaController {
             for (int i = 0; i <= sum; i++) {
                 map[j][i] += map[j - 1][i];
             }
-            //printArray(map, wallet.length, sum);
 
             for (int k = 1; k <= (int) formattedWallet.get(wallet.get(j-1)); k++) {
                 int initial = wallet.get(j - 1) * k;
                 for (int i = initial; i <= sum; i++) {
                     map[j][i] += map[j - 1][i - initial];
-                    //printArray(map, wallet.length, sum);
                 }
             }
         }
         return map[wallet.size()][sum];
     }
 
-    public static void printArray(int[][] map, int n, int sum) {
-        for (int i = 0; i <= n; i++) {
-            for (int j = 0; j <= sum; j++) {
-                System.out.print(map[i][j] + " ");
+    public String fareWaysResults(ArrayList<String> wallet, int sum) {
+
+        HashMap formattedWallet = formatWallet(wallet);
+
+        ArrayList<String>[][] map = new ArrayList[wallet.size() + 1][sum + 1];
+
+        ArrayList<String> init = new ArrayList<String>();
+        init.add("");
+        map[0][0] = init;
+        for (int j = 1; j <= wallet.size(); j++) {
+            for (int i = 0; i <= sum; i++) {
+                //map[j][i] += map[j-1][i];
+                if(map[j][i] != null && map[j-1][i] != null)
+                    map[j][i] = addForAll(map[j][i], map[j-1][i]);
             }
-            System.out.println("");
+
+            for (int k = 1; k <= (int) formattedWallet.get(wallet.get(j-1)); k++) {
+                int initial = Integer.parseInt(wallet.get(j - 1)) * k;
+                for (int i = initial; i <= sum; i++) {
+                    //map[j][i] += map[j-1][i-initial];
+                    if(map[j][i] != null && map[j-1][i-initial] != null)
+                        map[j][i] = addForAll(map[j][i], map[j-1][i-initial]);
+                }
+            }
         }
-        System.out.println();
+        for(int i = sum; i > 0; i--) {
+            for(int j = wallet.size(); j > 0; j--) {
+                if(map[j][i] != null)
+                    return map[j][i].get(0);
+            }
+        }
+        return "No possible way to pay fare";
     }
 
-    public static HashMap<Integer, Integer> formatWallet(ArrayList<Integer> wallet) {
+    public ArrayList<String> addForAll(ArrayList<String> orig, ArrayList<String> modi) {
+        ArrayList<String> res = new ArrayList<String>();
+        for(int i = 0; i < orig.size(); i++) {
+            for(int j = 0; j < modi.size(); j++) {
+                res.add(orig.get(i) + modi.get(j));
+            }
+        }
+        return res;
+    }
+
+
+    public HashMap<String, Integer> formatWallet(ArrayList<String> wallet) {
+        Collections.sort(wallet);
+        HashMap<String, Integer> counted = new HashMap<String, Integer>();
+        for (String coin : wallet) {
+            if (counted.containsKey(coin)) {
+                counted.put(coin, counted.get(coin) + 1);
+            } else {
+                counted.put(coin, 1);
+            }
+        }
+        return counted;
+    }
+
+    public HashMap<Integer, Integer> formatWalletWays(ArrayList<Integer> wallet) {
         Collections.sort(wallet);
         HashMap<Integer, Integer> counted = new HashMap<Integer, Integer>();
         for (Integer coin : wallet) {
