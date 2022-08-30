@@ -22,5 +22,5 @@ Unit tests are included, and can be found in complete/src/test/java/com/cta/CtaC
  3. Open separate cmd line.
  4. Run 'curl localhost:8080/addMoney/3,2,2,1' to add 3,2,2,1 currency to user wallet. 
  5. Run 'curl localhost:8080/checkWallet' to see that there is 3,2,2,1 in user wallet. 
- 6. Run 'curl localhost:8080/runFareWays/4' to see there is 2 ways to pay the fare. 
- 7. Run 'curl localhost:8080/runFare/4' to see that the fare can be paid with (3,1) or (2,2) (currently not working and will instead say there is no way to pay fare). 
+ 6. Run 'curl localhost:8080/checkFareWays/4' to see there is 2 ways to pay the fare. 
+ 7. Run 'curl localhost:8080/checkFare/4' to see that the fare can be paid with (3,1) or (2,2) (currently not working and will instead say there is no way to pay fare). 
